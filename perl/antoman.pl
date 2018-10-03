@@ -108,8 +108,6 @@ sub request {
 
     $self->renew_nonce();
 
-    my %oauth_params = ();
-
     # OAuth params are stored in self
     my @oauth_keys = qw/oauth_consumer_key oauth_nonce oauth_signature_method oauth_timestamp oauth_version/;
     push(@oauth_keys, 'oauth_token') if ($self->{oauth_token});
@@ -220,8 +218,6 @@ sub calculate_the_signature {
 
     my $sign_base_string = join('&', @sign_parameters);
 
-    print "Sign base string: $sign_base_string \n";
-
     if ('RSA-SHA1' eq $self->{oauth_signature_method}) {
 
         #TODO: REMOVE ME IN PROD
@@ -283,17 +279,5 @@ sub _parse_url_encoded {
 
     return \%query_params;
 }
-
-sub _build_url_encoded {
-    my (%params) = @_;
-    my @pairs = ();
-
-    for my $p (keys %params){
-        push @pairs, ("$p=" . MIME::Base64::encode_base64url($params{$p}));
-    }
-
-    return join('&', @pairs);
-}
-
 
 1;
