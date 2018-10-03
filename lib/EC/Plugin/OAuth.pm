@@ -31,6 +31,8 @@ sub request {
     # OAuth params are stored in self
     my @oauth_keys = qw/oauth_consumer_key oauth_nonce oauth_signature_method oauth_timestamp oauth_version/;
     push(@oauth_keys, 'oauth_token') if ($self->{oauth_token});
+    push(@oauth_keys, 'oauth_verifier') if ($self->{oauth_verifier});
+    push(@oauth_keys, 'oauth_callback') if ($self->{oauth_callback});
 
     foreach my $oauth_k (@oauth_keys) {
         croak "Missing OAuth parameter $oauth_k" unless $self->{$oauth_k};

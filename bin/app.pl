@@ -30,6 +30,10 @@ WdxK2YqN5hJNksVZefGiqXXgOrn3XHVZNKNRq3f6xw==
 $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
 
 my $base_url = 'http://nick:8080/';
+
+my $token_to_use = $ARGV[0];
+my $request_path = $ARGV[1] || 'rest/auth/latest/session';
+
 my %PARAMS = (
     base_url               => $base_url,
     request_method         => 'POST',
@@ -52,7 +56,8 @@ my %PARAMS = (
 );
 
 my $Oauth = EC::Plugin::OAuth->new(%PARAMS);
-$Oauth->{oauth_token} = $ARGV[0];
+$Oauth->{oauth_token} = $token_to_use;
+
 if (! $Oauth->{oauth_token}) {
 
     $Oauth->request_token();
@@ -69,9 +74,9 @@ if (! $Oauth->{oauth_token}) {
     }
 }
 
-print "Can make request with $Oauth->{oauth_token}\n";
+print "Will make request with $Oauth->{oauth_token}\n";
 
-my $path = $ARGV[1] || 'rest/auth/latest/session';
+my $path = $request_path || 'rest/auth/latest/session';
 print $Oauth->request('GET', $path, { param1 => 'value2' });
 
 exit 0;
