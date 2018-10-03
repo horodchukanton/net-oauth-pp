@@ -1,76 +1,3 @@
-use strict;
-use warnings;
-
-my $PRIVATE_KEY = ( '-----BEGIN RSA PRIVATE KEY-----
-MIICWwIBAAKBgQDOxQc+bK1Qpdq/C5TBLnKlviB5MuqmA82rvy5UKMEOq2Yu0jnQ
-izxmi1f7TISofBgQFNmlymhl4q/SUqYnGf601fCF1rWcWaS2GQFsPEjilL0y0vzG
-E1sG02I4i3sbpS79Y5btgxhobD8drgWuL/IitczAZlVII5pweNdncB+uQwIDAQAB
-AoGAdvjdcyi7DLVxyQ1T2VftdbqRGsuWQlHb7J+De787XkJ2+CfURk9nQKWaySi9
-B+jnO5GTrhZpvX4SppURr1wAtmmxdFlezfmeMA1ox7lN7F20myyVcQ61OZG2VPfu
-dGvuIOLWeQDP63SSSE0Vbzv8KVi0hQ/NR/IXNJA4wUMAUakCQQDrcs35Xnh6Ah0i
-87qhemm2D11Xk/v5Op5/mHANrKSiiujL+qns//KBM2hVlu7xCc1HBMXzwsPGENfF
-tHCexKnfAkEA4NFiK58QwNw66VNYpK/J84xPvaaLCGYncmZUN6QdH6ObQXUszRJv
-5mB2BElu+MT7ZnIFDK0r9W4EDHLBuxWQHQJAQ8GqHNVe/l2VXPWfA9Fiko4hYo6n
-uLVx325S8Nx6FHy9OdZNCHMvqpbMs7TX1m3nsURiYx/tjxZRwgeHUWlvKQJAVkLA
-wjAEQ5u81u3t4zK38ET0C7atPgnENPbidX741bz2w0TsbbsXSHPWlIqAk98w/vvc
-yCJh7YfK8ePORbReWQJAbTwLkwxQlZ4VV2D7G6aZPcoByxkrM1iXaqTmw67EHqqB
-WdxK2YqN5hJNksVZefGiqXXgOrn3XHVZNKNRq3f6xw==
------END RSA PRIVATE KEY-----' );
-
-$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
-
-my $base_url = 'http://nick:8080/';
-
-my %PARAMS = (
-    base_url               => $base_url,
-    request_method         => 'POST',
-
-    # HMAC-SHA1 is rejected by JIRA, using RSA-SHA1
-    oauth_signature_method => 'RSA-SHA1',
-    oauth_version          => '1.0',
-    oauth_consumer_key     => 'example',
-
-    request_token_path     => 'plugins/servlet/oauth/request-token',
-    authorize_token_path   => 'plugins/servlet/oauth/authorize',
-    access_token_path      => 'plugins/servlet/oauth/access-token',
-
-    private_key            => $PRIVATE_KEY,
-    # Will be set by a call to _renew_nonce()
-    # oauth_nonce            => $ts . $ts,
-    # oauth_timestamp        => $ts,
-
-    # secret                 => 'example'
-);
-
-my $Oauth = EC::Plugin::OAuth->new(%PARAMS);
-$Oauth->{oauth_token} = 'fMwMiotYTfE2FPsdNCjPyu5zmiVjfS5P';
-
-if (! $Oauth->{oauth_token}) {
-
-    $Oauth->request_token();
-
-    print "Auth request URL: " . ( $Oauth->generate_auth_url() ) . "\n";
-    print "<Press return once you have accepted request>";
-    <STDIN>;
-
-    if ($Oauth->authorize_token()) {
-        # print "Access - Token and Secret: $access_token - $access_secret \n";
-        print "Authorized $Oauth->{oauth_token}\n";
-    }
-    else {
-        die "No REST for the wicked \n";
-    }
-}
-else {
-    print "Can make request with $Oauth->{oauth_token}\n";
-    my $path = 'rest/auth/latest/session';
-
-    print $Oauth->request('GET', $path, { param1 => 'value2' });
-}
-
-exit 0;
-
-
 package EC::Plugin::OAuth;
 
 use strict;
@@ -85,13 +12,6 @@ use MIME::Base64 qw/encode_base64/;
 
 use LWP::UserAgent;
 use HTTP::Request;
-
-#TODO: DELETE ME IN PROD
-our $Bin;
-BEGIN {
-    use lib '.';
-    use FindBin '$Bin';
-}
 
 sub new {
     my ( $class, %p ) = @_;
@@ -192,7 +112,7 @@ sub generate_auth_url {
 
     die 'No request token' unless $token;
 
-    my $oauth_url = URI->new($base_url . $self->{authorize_token_path});
+    my $oauth_url = URI->new($self->{base_url} . $self->{authorize_token_path});
     $oauth_url->query_form({
         oauth_token => $token,
         %{( %extra_params ) ? \%extra_params : {}}
@@ -221,7 +141,7 @@ sub calculate_the_signature {
     if ('RSA-SHA1' eq $self->{oauth_signature_method}) {
 
         #TODO: REMOVE ME IN PROD
-        require "$Bin/RSA.pm";
+        require "Dependencies_RSA.pm";
 
         croak("Private key is missing") unless $self->{private_key};
 
