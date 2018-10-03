@@ -13,7 +13,7 @@ You can omit using *Dependencies_RSA.pm* installing *Crypt::Perl*
 Use case from bin/app.pl
   
 <pre>
-my $token_to_use = $ARGV[0];
+my $token_to_use = $ARGV[0] || '';
 my $request_path = $ARGV[1] || 'rest/auth/latest/session';
 
 my %PARAMS = (
